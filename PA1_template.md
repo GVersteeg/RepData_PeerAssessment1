@@ -1,9 +1,4 @@
----
-title: "Reproducible Research: Peer Assessment 1"
-output: 
-  html_document: 
-    keep_md: true
----
+# Reproducible Research: Peer Assessment 1
 
 author : Gerrit Versteeg
 
@@ -20,7 +15,8 @@ First step to take is unzipping 'activity.zip' into a ./data directory and then
 read the resulting 'activity.csv' into a tibble called 'DF-raw' using dplyr. 
 A peek of the content is shown.
 
-```{r loading,ECHO = TRUE}
+
+```r
 library("dplyr", warn.conflicts=FALSE)
 if (file.exists("./data/activity.csv")) {
         unlink("./data/activity.csv")
@@ -30,13 +26,35 @@ DF_raw <- tbl_df(read.csv("./data/activity.csv"))
 DF_raw
 ```
 
+```
+## # A tibble: 17,568 x 3
+##    steps       date interval
+##    <int>     <fctr>    <int>
+## 1     NA 2012-10-01        0
+## 2     NA 2012-10-01        5
+## 3     NA 2012-10-01       10
+## 4     NA 2012-10-01       15
+## 5     NA 2012-10-01       20
+## 6     NA 2012-10-01       25
+## 7     NA 2012-10-01       30
+## 8     NA 2012-10-01       35
+## 9     NA 2012-10-01       40
+## 10    NA 2012-10-01       45
+## # ... with 17,558 more rows
+```
+
 Next step is to pre-process the data for analysis. Obviously the date is 
 formatted as factor, inhibiting processing in weekdays and weekend. So we need
 to reformat that variable to the 'Date' format. 
 
-```{r Preprocessing,ECHO=TRUE}
+
+```r
 DF_raw$date <- as.Date(strptime(DF_raw$date, "%Y-%m-%d"))
 class(DF_raw$date)
+```
+
+```
+## [1] "Date"
 ```
 
 
@@ -45,7 +63,8 @@ class(DF_raw$date)
 First we calculate the total number of steps taken each day. Using dplyr we
 group the tibble by date and sum the steps into a column named 'total'.
 
-```{r totalstepsdaily, ECHO=TRUE}
+
+```r
 DF_tsd <-                                    ## dplyr-code to create DF-tsd
         DF_raw %>%                           ## use DF-raw to
         select(steps, date) %>%              ## select relevant columns
@@ -54,15 +73,35 @@ DF_tsd <-                                    ## dplyr-code to create DF-tsd
         print()                              ## and take a peek
 ```
 
+```
+## # A tibble: 61 x 2
+##          date total
+##        <date> <int>
+## 1  2012-10-01    NA
+## 2  2012-10-02   126
+## 3  2012-10-03 11352
+## 4  2012-10-04 12116
+## 5  2012-10-05 13294
+## 6  2012-10-06 15420
+## 7  2012-10-07 11015
+## 8  2012-10-08    NA
+## 9  2012-10-09 12811
+## 10 2012-10-10  9900
+## # ... with 51 more rows
+```
+
 Now let's plot a histogram of the frequency of the number of steps taken daily 
 to get an idea of the most frequent values.
 
-```{r tsd-hist, ECHO=TRUE}
+
+```r
 with(DF_tsd, hist(total,                              ## freq. daily steps
      main = "Histogram - Number of daily steps",      ## set main title
      xlab = "Number of daily steps",                  ## set label X-axis
      ylab = "Frequency"))                             ## set label Y-axis
 ```
+
+![](PA1_template_files/figure-html/tsd-hist-1.png)<!-- -->
 
 Apparently the most frequent number of daily steps lies between 10k and 15k 
 steps per day.
@@ -71,8 +110,14 @@ Finally we need to take a look at the mean and the median of the
 daily total of steps. Using summary will automatically separate the NA's and
 show us some more info.
 
-```{r tsd-mean, ECHO=TRUE}
+
+```r
 summary(DF_tsd$total)
+```
+
+```
+##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max.    NA's 
+##      41    8841   10760   10770   13290   21190       8
 ```
 
 Obviously the mean of all daily steps appears to be 10.770 steps per day,
@@ -88,7 +133,8 @@ These 288 (60*24/5) values will be the time-series used for the activity
 pattern, while we compute the mean of the daily number of steps for each these
 intervals (ignoring any NA-values). 
 
-```{r dailyactivitypattern, ECHO=TRUE}
+
+```r
 DF_dap <-                                    ## dplyr-code to create DF-dap
         DF_raw %>%                           ## use DF-raw to
         select(steps, interval) %>%          ## select relevant columns
@@ -98,10 +144,28 @@ DF_dap <-                                    ## dplyr-code to create DF-dap
         print()                              ## and take a peek
 ```
 
+```
+## # A tibble: 288 x 2
+##    interval       avg
+##       <int>     <dbl>
+## 1         0 1.7169811
+## 2         5 0.3396226
+## 3        10 0.1320755
+## 4        15 0.1509434
+## 5        20 0.0754717
+## 6        25 2.0943396
+## 7        30 0.5283019
+## 8        35 0.8679245
+## 9        40 0.0000000
+## 10       45 1.4716981
+## # ... with 278 more rows
+```
+
 Now let's plot this as time-series, showing the average (across days) of 
 steps taken during each specific interval of a day. 
 
-```{r dap-plot, ECHO=TRUE}
+
+```r
 with(DF_dap, plot(interval, avg,             ## plot DF_dap (avg.steps˜interval)
      type ="l",                              ## using a line-plot
      main = "Daily Activity Pattern",        ## set main title
@@ -109,13 +173,23 @@ with(DF_dap, plot(interval, avg,             ## plot DF_dap (avg.steps˜interval
      ylab = "Average number of steps"))      ## set label Y-axis
 ```
 
+![](PA1_template_files/figure-html/dap-plot-1.png)<!-- -->
+
 Looking at the resulting pattern, there seems to be a clear peak in the morning,
 that might indicate a morning run or walk each day prior to going to work. 
 If we like to see in which specific interval the peak lies, we select and print 
 the row where the average equals the maximum value.
 
-```{r dap-max, ECHO=TRUE}
+
+```r
 filter(DF_dap, avg == max(avg))
+```
+
+```
+## # A tibble: 1 x 2
+##   interval      avg
+##      <int>    <dbl>
+## 1      835 206.1698
 ```
 
 The result shows that interval 835 (08:35-08:39) contains the highest number of
