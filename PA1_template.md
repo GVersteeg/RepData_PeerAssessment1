@@ -2,18 +2,19 @@
 
 author : Gerrit Versteeg
 
-date   : Oct 14th, 2016
+date   : Oct 16th, 2016
 
 
 ## Loading and preprocessing the data
 
 Because the dataset (in ZIP-format) is already in the contents of the forked
-repo, we do not have to download the file again.  
-_Note: the original data was downloaded in RPeng's Repo on Feb 11th, 2014._  
+repo, we do not have to download the file again. _(Note: the original data was
+downloaded in RPeng's Repo on Feb 11th, 2014.)_  
 
-First step to take is unzipping 'activity.zip' into a ./data directory and then
-read the resulting 'activity.csv' into a dataset called 'DF-raw' using dplyr. 
-A peek of the content is shown.
+After loading the dplyr package silently, the first step to take is unzipping
+'activity.zip' into a ./data directory and then read the resulting 
+'activity.csv' into a dataset called 'DF-raw' using dplyr. A peek of the content
+is shown.
 
 
 ```r
@@ -22,7 +23,7 @@ if (file.exists("./data/activity.csv")) {          ## check if file exists
         unlink("./data/activity.csv")              ## if so -> delete 
 }
 unzip("./activity.zip", exdir = "./data")          ## unzip into data dir
-DF_raw <- tbl_df(read.csv("./data/activity.csv"))  ## load into a dataset
+DF_raw <- tbl_df(read.csv("./data/activity.csv"))  ## load into dataset/tibble
 DF_raw                                             ## and take a peek
 ```
 
@@ -58,7 +59,7 @@ class(DF_raw$date)                                         ## show class
 ```
 
 
-## What is mean total number of steps taken per day?
+## What is the mean number of daily steps taken?
 
 First we calculate the total number of steps taken each day. Using dplyr we
 group the dataset by date and sum the steps into a column named 'total'.
@@ -90,7 +91,8 @@ DF_tsd <-                                    ## dplyr-code to create DF-tsd
 ## # ... with 51 more rows
 ```
 
-Note: you can see that there are days with no observations at all.
+_Note: you can see that there are days with no observations at all
+(like Oct 1st, 2012 and Oct 8th, 2012)._
 
 
 Now let's plot a histogram of the frequency of the number of steps taken daily 
@@ -124,18 +126,18 @@ summary(DF_tsd$total)                         ## show summary with mean & median
 ##      41    8841   10760   10770   13290   21190       8
 ```
 
-Obviously the mean of all daily steps appears to be **10.770** steps per day,
-while the median is **10.760** steps/day. Also visible is the fact that there are
-8 days with no step registration at all.
+The mean of all daily steps is **10.770** steps per day, while the median is
+**10.760** steps/day. Also visible is the fact that there are 8 days with no 
+observations (registration of steps) at all.
 
 
 ## What is the average daily activity pattern?
 Now we want to take a look at the daily activity pattern using the average
 number of steps taken in each time interval. Looking at the variable 'interval'
 we see that the intervals vary from 0 (00:00-04:59) up to 2355 (23:55-23:59).
-These 288 (60*24/5) values will be the time-series used for the activity
-pattern, while we compute the mean of the daily number of steps for each of
-these intervals (ignoring any NA-values). 
+These 288 (60 minutes * 24 hours / 5 minutes) values will be the time-slots
+used for the activity pattern, while we compute the mean of the daily number
+of steps for each of these intervals (ignoring any NA-values). 
 
 
 ```r
@@ -143,8 +145,8 @@ DF_dap <-                                    ## dplyr-code to create DF-dap
         DF_raw %>%                           ## use DF-raw to
         select(steps, interval) %>%          ## select relevant columns
         group_by(interval) %>%               ## group them by interval
-        summarize(avg = mean(steps,          ## calculate the mean of the
-                  na.rm = TRUE)) %>%         ## interval across days
+        summarize(avg = mean(steps,          ## calculate the mean of each
+                  na.rm = TRUE)) %>%         ## interval across days (excl. NA's)
         print()                              ## and take a peek
 ```
 
@@ -165,11 +167,13 @@ DF_dap <-                                    ## dplyr-code to create DF-dap
 ## # ... with 278 more rows
 ```
 
-Asc an be expected, there is not much activity going on just after midnight.
+The peek shows the mean steps taken for the first intervals.  As can be
+expected, there is not much activity going on just after midnight.
 
 
-Now for the activity pattern of an average day, let's plot this as a time-series,
-showing the average (across days) of steps taken during each specific interval. 
+Now for the activity pattern of an average day, let's plot this dataset as a
+time-series, showing the average (across days) of steps taken during each 
+specific interval. 
 
 
 ```r
@@ -182,10 +186,13 @@ with(DF_dap, plot(interval, avg,             ## plot DF_dap (avg.steps˜interval
 
 ![](PA1_template_files/figure-html/dap-plot-1.png)<!-- -->
 
-Looking at the resulting pattern, there seems to be a clear peak in the morning
-(over **200** steps in 5-minutes). This might indicate a morning run or walk
-each day prior to going to work.  
-Because we like to see in which specific interval this peak lies exactly, 
+Looking at the resulting pattern, there seems to be a clear peak in one of the
+5-minute intervals in the morning (over **200** steps). This might be due to
+some kind of commuting to/from work, but the same pattern does not re-occur at
+the end of the workday. So maybe it indicates a sort of 'work out' in the form
+of a morning run or walk each day prior to going to work.
+
+Because we like to see in which specific interval this peak lies, 
 we select and print the row where 'average' equals the maximum value.
 
 
@@ -200,8 +207,8 @@ filter(DF_dap, avg == max(avg))  ## select row of interval with max # of steps
 ## 1      835 206.1698
 ```
 
-The result shows that interval **835** (08:35-08:39) contains the highest number of
-steps averaged across days. Namely roughly **206** steps. 
+The result shows that interval **835** (08:35-08:39) contains the highest number
+of steps averaged across days. Namely roughly **206** steps. 
 
 
 ## Imputing missing values
@@ -232,29 +239,29 @@ sum(is.na(DF_raw))              ## calculate NA's in complete dataframe
 ```
 
 Clearly the number of NA's in the complete dataset is the same as the number
-of NA's in de steps variable (i.e. 2304). Therefor NA's only occurr in the
+of NA's in de steps variable (i.e. 2304). Therefor NA's only occur in the
 variable 'steps'.
 
 ####Imputing strategy
-What will be the replacements for missing values?. Looking at the distribution 
+What will we replace the missing values with? Looking at the distribution 
 with the peak around 8:30, replacement of NA's with the mean of a complete day
-would ruin the pattern and because in some cases complete days are missing would
-result in an additional NA.  
-A better solution seems to be to impute values that coincide with the mean of 
-that specific interval. This will retain the activity pattern across the day.
+would 'ruin' the pattern and because in some cases complete days are missing
+would result in eight additional NA's. A better solution seems to be to impute
+values that coincide with the mean of that specific interval.
 
 
-When imputing the missing values, we need to do that with the mean of the 
-interval at hand. Using dplyr's mutate to replace the NA with 'mean(steps')
-would result in the mean of all steps in the dataframe, if we leave the dataset
-as is. To fill it with the means per interval, we first group the dataset using
-group_by(interval). Calling mean(steps) will now return the mean for the interval
-rather than the overall mean. After determining the mean, we remove the grouping
-because the resulting dataset does not need grouping per interval.
+So, we will impute the missing values with the mean of the interval at hand. 
+Using dplyr's mutate to replace the NA with 'mean(steps)' would result in the
+mean of **all** steps in the dataframe, if we leave the dataset as is 
+(i.e. ungrouped). To fill it with the means per interval, we need to group
+the dataset using group_by(interval). Calling mean(steps) will now return the 
+mean for the interval rather than the overall mean. After determining the mean, 
+we remove the grouping because the resulting dataset does not need grouping per 
+interval.
 
 
 ```r
-DF_nas <-                                     ## create new dataset
+DF_ina <-                                     ## create new dataset
         DF_raw %>%                            ## derived from DF_raw
         group_by(interval) %>%                ## grouped to get mean/interval
         mutate(steps = ifelse(is.na(steps),   ## replace steps if value is NA
@@ -289,8 +296,8 @@ group the dataset by date and sum the steps into a column named 'total'.
 
 
 ```r
-DF_tsdnas <-                                 ## dplyr-code to create DF-tsdnas
-        DF_nas %>%                           ## use DF-nas to
+DF_tsdina <-                                 ## dplyr-code to create DF-tsdina
+        DF_ina %>%                           ## use DF-ina to
         select(steps, date) %>%              ## select relevant columns
         group_by(date) %>%                   ## group them by date
         summarize(total = sum(steps)) %>%    ## calculate the sum of steps
@@ -314,18 +321,18 @@ DF_tsdnas <-                                 ## dplyr-code to create DF-tsdnas
 ## # ... with 51 more rows
 ```
 
-Now let's regenerate the histogram of the frequency of the number of steps taken
-daily to get an idea of the change in the most frequent values.
+Now let's regenerate the histogram to get an idea of the change in the frequency
+of the number of steps taken daily.
 
 
 ```r
-with(DF_tsdnas, hist(total,                           ## freq. daily steps
+with(DF_tsdina, hist(total,                           ## freq. daily steps
      main = "Histogram - Number of daily steps",      ## set main title
      xlab = "Number of daily steps",                  ## set label X-axis
      ylab = "Frequency"))                             ## set label Y-axis
 ```
 
-![](PA1_template_files/figure-html/tsd-hist-nas-1.png)<!-- -->
+![](PA1_template_files/figure-html/tsd-hist-ina-1.png)<!-- -->
 
 Apparently the most frequent number of daily steps still lies between **10k and 
 15k** steps per day, but the number of observations between 10k and 15k has risen
@@ -338,8 +345,8 @@ daily total of steps, again using summary.
 
 
 ```r
-sum_nas <- as.integer(summary(DF_tsdnas$total)) ## store for comparison
-summary(DF_tsdnas$total)                        ## show summary for mean/median
+sum_ina <- as.integer(summary(DF_tsdina$total)) ## store for comparison
+summary(DF_tsdina$total)                        ## show summary for mean/median
 ```
 
 ```
@@ -347,7 +354,7 @@ summary(DF_tsdnas$total)                        ## show summary for mean/median
 ##      41    9819   10640   10750   12810   21190
 ```
 
-The new mean is **10.750** steps/day, while the new median adds up to **10.640*
+The new mean is **10.750** steps/day, while the new median adds up to **10.640**
 steps/day.
 
 Comparing the results:
@@ -358,40 +365,36 @@ Comparing the results:
 | Imputed  |41 |10640 |10750 |21190 | |
 
 After imputing the interval mean, obviously the mean of all daily steps appears 
-to have changed from 10.770 to 10.750 steps per day, while the median changed
-from 10.760 to 10.640 steps/day. Apparantly the imputed values are lower than
-the original mean and therefore drag down the mean. No NA's remain now.
+to have changed from **10.770 to 10.750** steps per day, while the median changed
+from **10.760 to 10.640** steps/day. Apparantly the imputed values are lower than
+the original mean and therefore drag down the mean. No NA's remain after imputing.
 
 ## Are there differences in activity patterns between weekdays and weekends?
 
 To be able to distinguish between weekdays and weekend days, we need to add
-another variable 'ww' to the dataset DF_nas (note: this is the dataset with the 
+another variable 'ww' to the dataset DF_ina (note: this is the dataset with the 
 imputed values). Using the weekdays function on the variable 'date'
 (that was reformated into date whilst cleaning the data at the start) 
 we will check to see whether the data is a 'saturday' or a 'sunday". If so,
 we set 'ww' to 'weekend' otherwise to 'weekday'.
 
 
-While we're at it, we next group the dataset on 'ww' and 'interval' because we
-now need to calculate the mean number of daily steps for each type of day
-(weekday or weekend) **and** for each interval across all days.
-
 
 ```r
-WE <- c("Saturday", "Sunday")
-DF_nasw <-                                   ## dplyr-code to create DF-nasw
-        DF_nas %>%                           ## use DF-nas to
-        mutate(ww = ifelse(weekdays(date)    ## add a column 'ww'
-                           %in% WE,          ## check if weekday = Sat or Sun
+WE <- c("Saturday", "Sunday")                ## make vector with 'weekend'-days
+DF_inaw <-                                   ## dplyr-code to create DF-inaw
+        DF_ina %>%                           ## use DF-ina to
+        mutate(ww = as.factor(ifelse(        ## add a factor column 'ww'
+                weekdays(date) %in% WE,      ## check if weekday = Sat or Sun
                            "weekend",        ## then fill it with "weekend"
-                           "weekday")) %>%   ## else fill it with "weekday"
+                           "weekday"))) %>%  ## else fill it with "weekday"
         print                                ## and take a peek
 ```
 
 ```
 ## # A tibble: 17,568 x 4
 ##    steps       date interval      ww
-##    <int>     <date>    <int>   <chr>
+##    <int>     <date>    <int>  <fctr>
 ## 1      1 2012-10-01        0 weekday
 ## 2      0 2012-10-01        5 weekday
 ## 3      0 2012-10-01       10 weekday
@@ -405,9 +408,15 @@ DF_nasw <-                                   ## dplyr-code to create DF-nasw
 ## # ... with 17,558 more rows
 ```
 
+We determine the new activity pattern (now with imputed NA's) we group the 
+dataset DF_inaw on 'ww' and 'interval' because we now need to calculate the mean
+number of daily steps for each type of day (weekday or weekend) **and** 
+for each interval across all days.
+
+
 ```r
-DF_dapw <-                                   ## dplyr-code to create DF-dapw
-        DF_nasw %>%                          ## use DF-nasw to
+DF_dapina <-                                 ## dplyr-code to create DF-dapina
+        DF_inaw %>%                          ## use DF-inaw to
         select(steps, interval, ww) %>%      ## select the relevant columns
         group_by(ww, interval) %>%           ## group them by ww & interval
         summarize(avg = mean(steps, 
@@ -420,7 +429,7 @@ DF_dapw <-                                   ## dplyr-code to create DF-dapw
 ## Groups: ww [?]
 ## 
 ##         ww interval        avg
-##      <chr>    <int>      <dbl>
+##     <fctr>    <int>      <dbl>
 ## 1  weekday        0 2.15555556
 ## 2  weekday        5 0.40000000
 ## 3  weekday       10 0.15555556
@@ -434,32 +443,36 @@ DF_dapw <-                                   ## dplyr-code to create DF-dapw
 ## # ... with 566 more rows
 ```
 
+The new dataset (DF_dapina) with the daily average steps per interval has 576
+rows now, because we split the complete dataset into weekdays and weekends, 
+resulting in a 288-interval set for weekdays and an 288-interval set for
+weekends.
 Now that we have the dataset that we need, we can start to plot this
-as a time-series in two frames (one for weekend and onde for weekdays), showing
+as a time-series in two frames (one for weekend and one for weekdays), showing
 the average (across days) of steps taken during each specific interval of these
 two types of days. 
 
 *Please note that I use ggplot2 for this plot, because I like the way it shows
 multiple facets. This differs a bit from the example plot given by our mentor. 
 He stated that is not needed to reproduce the figure exactly as is. As long as
-the comparison is facilitated in roughly the same manner. So I hope you don't
-mind*
+the comparison is facilitated in the same manner. So I hope you don't mind*
 
 
 ```r
 library(ggplot2)
-g <- ggplot(DF_dapw, aes(interval, avg))             ## setup graphic object for ggplot
+g <- ggplot(DF_dapina, aes(interval, avg))           ## setup graphic object
 g+geom_path()+                                       ## plot the path
-        facet_grid(ww~.) +                           ## setup the grid (2 rows x 1 column)
+        facet_grid(ww~.) +                           ## setup grid (2row x 1col)
         xlab("5-minute interval") +                  ## label X-axis
         ylab("Average number of steps") +            ## label Y-axis
-        ggtitle("Daily Activity Patterns compared")
+        ggtitle("Daily Activity Patterns compared")  ## title the graph
 ```
 
 ![](PA1_template_files/figure-html/dapw-plot-1.png)<!-- -->
 
-Activity appears to start **earlier** in weekdays (around 05:00) than in weekends
-(around 07:30). The **'workout' pattern** is still visible during weekdays, refering
-to the peak around 8:30 followed by lower activity during the remainder of the
-day. While during weekends, activity is **spread more evenly** across the day.
+Activity appears to start **earlier** in weekdays (around 05:00) than in 
+weekends (around 07:30). The **'workout' pattern** is still visible during
+weekdays, refering to the peak around 8:30 followed by lower activity during the
+remainder of the day. While during weekends, there is **more** activity going on
+that is **spread more evenly** across the day.
 
