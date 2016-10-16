@@ -102,7 +102,7 @@ to get an idea of the most frequent values.
 ```r
 with(DF_tsd, hist(total,                              ## freq. daily steps
      main = "Histogram - Number of daily steps",      ## set main title
-     xlab = "Number of daily steps",                  ## set label X-axis
+     xlab = "Total number of daily steps",            ## set label X-axis
      ylab = "Frequency"))                             ## set label Y-axis
 ```
 
@@ -180,7 +180,7 @@ specific interval.
 with(DF_dap, plot(interval, avg,             ## plot DF_dap (avg.steps˜interval)
      type ="l",                              ## using a line-plot
      main = "Daily Activity Pattern",        ## set main title
-     xlab = "5-minute interval",             ## set label X-axis
+     xlab = "5-minute Interval",             ## set label X-axis
      ylab = "Average number of steps"))      ## set label Y-axis
 ```
 
@@ -328,7 +328,7 @@ of the number of steps taken daily.
 ```r
 with(DF_tsdina, hist(total,                           ## freq. daily steps
      main = "Histogram - Number of daily steps",      ## set main title
-     xlab = "Number of daily steps",                  ## set label X-axis
+     xlab = "Total number of daily steps",            ## set label X-axis
      ylab = "Frequency"))                             ## set label Y-axis
 ```
 
@@ -465,7 +465,7 @@ g+geom_path()+                                       ## plot the path
         facet_grid(ww~.) +                           ## setup grid (2row x 1col)
         xlab("5-minute interval") +                  ## label X-axis
         ylab("Average number of steps") +            ## label Y-axis
-        ggtitle("Daily Activity Patterns compared")  ## title the graph
+        ggtitle("Daily Activity Patterns Compared")  ## title the graph
 ```
 
 ![](PA1_template_files/figure-html/dapw-plot-1.png)<!-- -->
